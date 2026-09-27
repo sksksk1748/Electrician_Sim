@@ -65,7 +65,7 @@ const AnalogMeter = (() => {
     return s;
   }
 
-  function create({ onSelect }) {
+  function create({ onSelect, onAdj }) {
     const svg = sv('svg', { class: 'meter-svg', viewBox: '0 0 360 540', role: 'img', 'aria-label': '指針式三用電表' });
     let knobHTML = '';
     GROUPS.forEach(g => {
@@ -87,7 +87,10 @@ const AnalogMeter = (() => {
       <path d="M150 240a30 30 0 0 1 60 0z" style="fill:#2A2A26"/>
       <circle cx="${PX}" cy="${PY}" r="6" style="fill:#555"/>
       <text class="fuse-flag" x="300" y="268" text-anchor="middle" style="font-family:var(--font-mono);font-size:11px;font-weight:700;fill:#C0261B" opacity="0">FUSE ✕</text>
-      <g class="adj" transform="translate(48,276)">
+      <g class="adj" transform="translate(48,276)" tabindex="0" role="slider" aria-label="0Ω 歸零旋鈕：拖曳旋轉、滾輪或方向鍵調整" aria-valuemin="-15" aria-valuemax="15" aria-valuenow="0" style="cursor:grab;touch-action:none">
+        <circle r="31" style="fill:transparent"/>
+        <text x="-27" y="-14" text-anchor="middle" style="font-family:var(--font-mono);font-size:12px;font-weight:700;fill:#2A2A26">−</text>
+        <text x="27" y="-14" text-anchor="middle" style="font-family:var(--font-mono);font-size:12px;font-weight:700;fill:#2A2A26">+</text>
         <circle r="19" style="fill:#2A302D;stroke:#111;stroke-width:2"/>
         <line class="adj-line" x1="0" y1="0" x2="0" y2="-15" style="stroke:#fff;stroke-width:3;stroke-linecap:round"/>
         <text y="36" text-anchor="middle" style="font-family:var(--font-mono);font-size:10px;font-weight:700;fill:#2A2A26">0Ω ADJ</text>
@@ -112,8 +115,44 @@ const AnalogMeter = (() => {
     const needle = svg.querySelector('.needle');
     const ptr = svg.querySelector('.knob-ptr');
     const adjLine = svg.querySelector('.adj-line');
+    /* 0Ω ADJ 旋鈕：繞著旋鈕拖曳就能轉，也可以用滾輪或方向鍵 */
+    const adjG = svg.querySelector('.adj');
+    const adjAngle = e => {
+      const pt = svg.createSVGPoint();
+      pt.x = e.clientX; pt.y = e.clientY;
+      const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+      return Math.atan2(p.y - 276, p.x - 48) * 180 / Math.PI;
+    };
+    let adjDrag = null;
+    adjG.addEventListener('pointerdown', e => {
+      if (!onAdj) return;
+      e.preventDefault();
+      adjDrag = { id: e.pointerId, a: adjAngle(e) };
+      adjG.style.cursor = 'grabbing';
+      try { adjG.setPointerCapture(e.pointerId); } catch (err) { /* 忽略 */ }
+    });
+    adjG.addEventListener('pointermove', e => {
+      if (!adjDrag || e.pointerId !== adjDrag.id) return;
+      const a = adjAngle(e);
+      let d = a - adjDrag.a;
+      if (d > 180) d -= 360;
+      if (d < -180) d += 360;
+      adjDrag.a = a;
+      onAdj(d / 900);                       // 旋鈕轉 1 度 = 調整 1/900
+    });
+    const endAdj = () => { adjDrag = null; adjG.style.cursor = 'grab'; };
+    adjG.addEventListener('pointerup', endAdj);
+    adjG.addEventListener('pointercancel', endAdj);
+    adjG.addEventListener('wheel', e => { if (!onAdj) return; e.preventDefault(); onAdj(e.deltaY < 0 ? 0.003 : -0.003); }, { passive: false });
+    adjG.addEventListener('keydown', e => {
+      const d = { ArrowRight: 0.002, ArrowUp: 0.002, ArrowLeft: -0.002, ArrowDown: -0.002 }[e.key];
+      if (d && onAdj) { e.preventDefault(); onAdj(d); }
+    });
     const fuseFlag = svg.querySelector('.fuse-flag');
-    let ang = -SPAN, vel = 0, target = -SPAN, pinned = false, raf = null, last = 0;
+    let ang = -SPAN, vel = 0, target = -SPAN, pinned = false, raf = null, last = 0, posIdx = 0;
+    /* 讓 3D 工作台上的電表跟著同一支指針、同一個檔位 */
+    const subs = new Set();
+    const emit = () => subs.forEach(f => f(ang, posIdx));
 
     function tick(t) {
       const dt = Math.min(0.04, (t - last) / 1000 || 0.016);
@@ -122,6 +161,7 @@ const AnalogMeter = (() => {
       vel += (140 * (tgt - ang) - 13 * vel) * dt;
       ang += vel * dt;
       needle.setAttribute('transform', `rotate(${ang.toFixed(2)} ${PX} ${PY})`);
+      emit();
       if (!pinned && Math.abs(tgt - ang) < 0.03 && Math.abs(vel) < 0.05) { raf = null; return; }
       raf = requestAnimationFrame(tick);
     }
@@ -129,16 +169,17 @@ const AnalogMeter = (() => {
       const fc = clamp(f, -0.07, 1.06);
       pinned = f > 1.03 || f < -0.06;
       target = -SPAN + 2 * SPAN * fc;
-      if (prefersReducedMotion()) { ang = target; needle.setAttribute('transform', `rotate(${ang} ${PX} ${PY})`); return; }
+      if (prefersReducedMotion()) { ang = target; needle.setAttribute('transform', `rotate(${ang} ${PX} ${PY})`); emit(); return; }
       if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); }
     }
-    Page.onLeave(() => { if (raf) cancelAnimationFrame(raf); raf = null; });
+    Page.onLeave(() => { if (raf) cancelAnimationFrame(raf); raf = null; subs.clear(); });
     return {
       el: svg,
-      setPos(i) { ptr.setAttribute('transform', `rotate(${i * STEP} ${KX} ${KY})`); },
-      setAdj(v) { adjLine.setAttribute('transform', `rotate(${v * 900})`); },
+      setPos(i) { posIdx = i; ptr.setAttribute('transform', `rotate(${i * STEP} ${KX} ${KY})`); emit(); },
+      setAdj(v) { adjLine.setAttribute('transform', `rotate(${v * 900})`); adjG.setAttribute('aria-valuenow', Math.round(v * 100)); },
       setFuse(blown) { fuseFlag.setAttribute('opacity', blown ? 1 : 0); },
       setDeflection,
+      subscribe(fn) { subs.add(fn); fn(ang, posIdx); return () => subs.delete(fn); },
     };
   }
 
@@ -180,7 +221,7 @@ const MeterLab = (() => {
       pos: POS[0], posI: 0, red: null, black: null, shorted: false, armed: 'red',
       adj: 0, drift: 0, fuse: false, mistakes: 0, swOn: false, swOff: false, lastF: 0, pinnedBefore: false,
     };
-    const meter = AnalogMeter.create({ onSelect: i => select(i) });
+    const meter = AnalogMeter.create({ onSelect: i => select(i), onAdj: d => setAdj(s.adj + d) });
     const adjIn = h('input', { type: 'range', id: 'adj', min: -0.15, max: 0.15, step: 0.001, value: 0, 'aria-label': '零歐姆調整旋鈕' });
     const probeRed = h('button', { type: 'button', class: 'probe-btn' });
     const probeBlack = h('button', { type: 'button', class: 'probe-btn' });
@@ -192,30 +233,87 @@ const MeterLab = (() => {
     const mistakes = h('div', { class: 'tiny muted' });
     const taskBox = h('div', {});
     const bench = h('div', { class: 'bench' });
+    /* 工作台兩種操作方式：3D 拖曳表筆，或原本的清單點選 */
+    const can3d = typeof Bench3D !== 'undefined' && Bench3D.supported();
+    const bench3dBox = h('div', { class: 'bench3d', hidden: true });
+    const benchHelp = h('p', { class: 'small muted' });
+    const modeBtns = [['3d', '3D 工作台'], ['list', '清單模式']].map(([m, label]) =>
+      h('button', { type: 'button', 'data-mode': m, 'aria-pressed': 'false', onclick: () => setMode(m, true) }, label));
+    const modeSeg = h('div', { class: 'seg', role: 'group', 'aria-label': '工作台操作方式' }, modeBtns);
+    let mode = 'list', bench3d = null, left = false;
     root.append(h('div', { class: 'meter-lab' },
       h('div', { class: 'meter-col' },
         meter.el,
-        h('div', { class: 'adj-row' }, h('label', { for: 'adj' }, '0Ω ADJ'), adjIn),
+        h('div', { class: 'adj-row' },
+          h('label', { for: 'adj' }, '0Ω ADJ'),
+          h('button', { type: 'button', class: 'btn btn-sm', 'aria-label': '0Ω ADJ 往左微調', onclick: () => setAdj(s.adj - 0.003) }, '−'),
+          adjIn,
+          h('button', { type: 'button', class: 'btn btn-sm', 'aria-label': '0Ω ADJ 往右微調', onclick: () => setAdj(s.adj + 0.003) }, '+')),
         h('div', { class: 'probe-row' }, probeRed, probeBlack),
         h('div', { class: 'row' }, btnShort, btnLift, btnFuse),
         hint, note, mistakes,
       ),
-      h('div', { class: 'stack' }, taskBox, h('h3', {}, '工作台'), h('p', { class: 'small muted' }, '先點上面的「紅棒」或「黑棒」決定要放哪一支，再點工作台上的端子。放好一支後會自動換另一支。'), bench),
+      h('div', { class: 'stack' }, taskBox,
+        h('div', { class: 'bench-head' }, h('h3', {}, '工作台'), can3d ? modeSeg : null),
+        benchHelp, bench3dBox, bench),
     ));
 
     function select(i) {
       const prev = s.pos;
       s.posI = i; s.pos = POS[i];
       meter.setPos(i);
-      if (s.pos.k === 'OHM' && (prev.k !== 'OHM' || prev.v !== s.pos.v)) s.drift = (Math.random() < 0.5 ? -1 : 1) * rand(0.03, 0.08);
+      // 換 Ω 檔後 0 點會偏掉：大多停在 0 的左邊（電池電壓下降），偶爾稍微超過
+      if (s.pos.k === 'OHM' && (prev.k !== 'OHM' || prev.v !== s.pos.v)) s.drift = Math.random() < 0.75 ? -rand(0.03, 0.08) : rand(0.012, 0.025);
       beep(400, 0.02, 'square', 0.03);
       update();
     }
-    adjIn.addEventListener('input', () => { s.adj = +adjIn.value; meter.setAdj(s.adj); update(); });
+    function setAdj(v) {
+      s.adj = clamp(+v.toFixed(4), -0.15, 0.15);
+      adjIn.value = s.adj;
+      meter.setAdj(s.adj);
+      update();
+    }
+    adjIn.addEventListener('input', () => setAdj(+adjIn.value));
     probeRed.addEventListener('click', () => { s.armed = 'red'; drawProbes(); });
     probeBlack.addEventListener('click', () => { s.armed = 'black'; drawProbes(); });
     btnShort.addEventListener('click', () => { s.shorted = true; s.red = s.black = null; drawProbes(); drawBench(); update(); });
-    btnLift.addEventListener('click', () => { s.shorted = false; s.red = s.black = null; s.armed = 'red'; drawProbes(); drawBench(); update(); });
+    btnLift.addEventListener('click', () => { if (bench3d) bench3d.home(); s.shorted = false; s.red = s.black = null; s.armed = 'red'; drawProbes(); drawBench(); update(); });
+
+    const HELP = {
+      '3d': '用滑鼠或手指<b>拖曳紅、黑表筆</b>：筆尖靠近端子會自動吸上去接觸，指針立刻有反應；把一支拖到另一支的筆尖上就是兩棒短接。拖曳空白處旋轉視角，滾輪或兩指縮放，右鍵拖曳平移。點開關的翹板可以切換 ON/OFF。',
+      list: '先點上面的「紅棒」或「黑棒」決定要放哪一支，再點工作台上的端子。放好一支後會自動換另一支。',
+    };
+    function setMode(m, remember) {
+      if (m === '3d' && !can3d) m = 'list';
+      mode = m;
+      if (remember) { try { localStorage.setItem('peixian-dojo-bench', m); } catch (e) { /* 忽略 */ } }
+      modeBtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === m ? 'true' : 'false'));
+      bench.hidden = m !== 'list';
+      bench3dBox.hidden = m !== '3d';
+      benchHelp.innerHTML = HELP[m] + (can3d ? '' : '<br>這個瀏覽器不支援 3D 繪圖（WebGL2），所以使用清單模式。');
+      if (m === '3d' && !bench3d) {
+        bench3d = Bench3D.create(bench3dBox, { items: B, getState: () => s, meter, onProbe: probeFrom3D, onToggleSwitch: toggleSwitch });
+        bench3d.ready.catch(() => {
+          if (left) return;
+          bench3d = null;
+          toast('3D 工作台載入失敗（需要網路連線），先改用清單模式。', 'bad');
+          setMode('list', false);
+        });
+      }
+      drawProbes(); drawBench();
+    }
+    /* 3D 工作台回報表筆接觸到哪裡：{item, t} 端子、'short' 兩棒互碰、null 懸空 */
+    function probeFrom3D(which, target) {
+      if (target === 'short') { s.shorted = true; s.red = s.black = null; }
+      else {
+        if (s.shorted) { s.shorted = false; s.red = s.black = null; }
+        s[which] = target;
+      }
+      if (target) beep(1000, 0.02, 'square', 0.03);
+      drawProbes(); update();
+    }
+    function toggleSwitch() { B.sw.on = !B.sw.on; beep(700, 0.03); drawBench(); update(); }
+    Page.onLeave(() => { left = true; if (bench3d) bench3d.dispose(); bench3d = null; });
     btnFuse.addEventListener('click', () => { s.fuse = false; btnFuse.hidden = true; meter.setFuse(false); toast('換上新的保險絲了。量電壓前先確認檔位！'); update(); });
 
     const k = () => 1 + s.drift + s.adj;
@@ -270,7 +368,7 @@ const MeterLab = (() => {
         beep(120, 0.4, 'sawtooth', 0.06);
         toast(s.pos.k === 'mA' ? '砰！電流檔直接碰電源，保險絲燒斷了。' : '砰！在帶電線路上用 Ω 檔，保險絲燒斷了。', 'bad');
       }
-      const pinnedNow = d.f > 1.03 && !d.blow;
+      const pinnedNow = d.f > 1.03 && !d.blow && s.pos.k !== 'OHM';   // Ω 檔短接超過 0 只是還沒歸零，不算打表
       if (pinnedNow && !s.pinnedBefore) { s.mistakes++; toast('指針打到底了！檔位太小，換大一檔。', 'bad'); beep(160, 0.2, 'sawtooth', 0.05); }
       s.pinnedBefore = pinnedNow;
       meter.setDeflection(d.blow ? 0 : d.f);
@@ -281,6 +379,7 @@ const MeterLab = (() => {
       hint.innerHTML = readHint();
       mistakes.textContent = s.mistakes ? `操作失誤 ${s.mistakes} 次（打表、燒保險絲）。真的電表可能已經壞了。` : '';
       drawTask();
+      if (bench3d) bench3d.sync();
     }
 
     function readHint() {
@@ -288,7 +387,15 @@ const MeterLab = (() => {
       if (p.k === 'OFF') return '<b>OFF</b>：電表關閉。用完記得轉回這裡。';
       if (p.k === 'OHM') {
         const zs = zeroed() ? '<span class="pill ok">已歸零</span>' : '<span class="pill warn">尚未歸零</span>';
-        return `<b>Ω ×${p.v >= 1000 ? p.v / 1000 + 'k' : p.v}</b> ${zs}<br>讀最上面的綠色 Ω 刻度（右 0、左 ∞），讀值 × ${p.v}。換檔後先「兩棒短接」再轉 0Ω ADJ 歸零。`;
+        let how = '';
+        if (!zeroed()) {
+          const sig = signal();
+          if (sig.r === 0) how = k() < 1
+            ? '<br><b>指針停在 0 的左邊</b> → 把 0Ω ADJ 往 <b>+</b>（右）轉。'
+            : '<br><b>指針超過 0 了</b> → 把 0Ω ADJ 往 <b>−</b>（左）轉。';
+          else how = '<br>先讓兩支筆尖互碰（兩棒短接），指針會往右偏，再轉 0Ω ADJ 讓它剛好停在 0。';
+        }
+        return `<b>Ω ×${p.v >= 1000 ? p.v / 1000 + 'k' : p.v}</b> ${zs}<br>讀最上面的綠色 Ω 刻度（右 0、左 ∞），讀值 × ${p.v}。${how}`;
       }
       const name = p.k === 'ACV' ? '交流電壓' : p.k === 'DCV' ? '直流電壓' : '直流電流';
       const unit = p.k === 'mA' ? 'mA' : 'V';
@@ -303,8 +410,10 @@ const MeterLab = (() => {
         const it = B[pr.item];
         return it.name + '・' + it.terms.find(t => t[0] === pr.t)[1];
       };
-      probeRed.className = 'probe-btn' + (s.armed === 'red' ? ' armed' : '');
-      probeBlack.className = 'probe-btn' + (s.armed === 'black' ? ' armed' : '');
+      const listMode = mode === 'list';
+      probeRed.disabled = probeBlack.disabled = !listMode;
+      probeRed.className = 'probe-btn' + (listMode && s.armed === 'red' ? ' armed' : '');
+      probeBlack.className = 'probe-btn' + (listMode && s.armed === 'black' ? ' armed' : '');
       probeRed.innerHTML = `<span class="pname"><i class="pdot" style="background:var(--w-red)"></i>紅棒（+）</span><span class="ploc">${loc(s.red)}</span>`;
       probeBlack.innerHTML = `<span class="pname"><i class="pdot" style="background:#1B1B1B;box-shadow:0 0 0 1.5px var(--wire-halo)"></i>黑棒（COM）</span><span class="ploc">${loc(s.black)}</span>`;
     }
@@ -390,7 +499,7 @@ const MeterLab = (() => {
       },
       {
         title: '零歐姆調整',
-        text: '量電阻之前一定要<b>歸零</b>：<br>① 轉到 <b>Ω ×10</b>　② 按「兩棒短接」　③ 拖動 <b>0Ω ADJ</b> 滑桿，讓指針剛好停在 Ω 刻度最右邊的 <b>0</b>。',
+        text: '量電阻之前一定要<b>歸零</b>：<br>① 轉到 <b>Ω ×10</b>　② 讓兩支筆尖互碰：按「兩棒短接」，或在 3D 工作台把一支表筆拖到另一支的筆尖上　③ 拖動 <b>0Ω ADJ</b> 滑桿，讓指針剛好停在 Ω 刻度最右邊的 <b>0</b>。',
         auto: () => s.pos.k === 'OHM' && s.pos.v === 10 && s.shorted && zeroed(),
       },
       {
@@ -409,7 +518,7 @@ const MeterLab = (() => {
       },
       {
         title: '檢查開關通不通',
-        text: '用 <b>Ω ×1</b>（先歸零）量開關的兩個端子，<b>ON 和 OFF 各量一次</b>（用工作台上的切換按鈕）。',
+        text: '用 <b>Ω ×1</b>（先歸零）量開關的兩個端子，<b>ON 和 OFF 各量一次</b>（3D 工作台點開關的翹板；清單模式按「切到 ON／OFF」）。',
         need: () => s.swOn && s.swOff,
         needMsg: '還沒在已歸零的 Ω 檔下，把開關 ON、OFF 都量過一次。',
         choice: { q: '開關 OFF 時，指針停在哪裡？', opts: ['最右邊 0（導通）', '最左邊 ∞（不動）', '正中間'], answer: () => 1 },
@@ -532,6 +641,9 @@ const MeterLab = (() => {
       if (focused) { const i = card.querySelector('#ans'); if (i) i.focus(); }
     }
 
+    let savedMode = null;
+    try { savedMode = localStorage.getItem('peixian-dojo-bench'); } catch (e) { /* 忽略 */ }
+    setMode(savedMode === 'list' || !can3d ? 'list' : '3d', false);
     select(0);
     drawProbes(); drawBench(); update();
   }
