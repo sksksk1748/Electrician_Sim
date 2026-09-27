@@ -267,6 +267,118 @@ const LESSONS = {
         },
       },
       {
+        title: '電從發電廠到你家',
+        html: `
+        <div class="prose">
+          <p>插座裡的電，是從很遠的發電廠一路送過來的，中間要經過好幾次<b>升壓、降壓</b>。點路線上的每一站，看看它長什麼樣子、在做什麼。</p>
+        </div>
+        <div class="figure"><svg data-o="grid" viewBox="0 0 760 250" role="img" aria-label="從發電廠到住家的電力路線，共十站"></svg></div>
+        <section class="stn-panel" aria-label="這一站的樣子">
+          <div class="stn-title" aria-live="polite"><span class="circuit-tag" data-o="no"></span><h3 data-o="name"></h3><span class="pill" data-o="volt"></span></div>
+          <div class="stn-art" data-o="art"></div>
+          <p data-o="text"></p>
+          <div class="eyebrow">點圖上的編號，看看那是什麼</div>
+          <ol class="spot-list" data-o="spots"></ol>
+          <div class="row stn-nav"><button type="button" class="btn btn-sm" data-o="prev">← 上一站</button><button type="button" class="btn btn-sm btn-primary" data-o="next">下一站 →</button></div>
+        </section>
+        <p class="small muted">插圖為示意；電壓等級依台電輸配電系統，各地實際配置會有差異。</p>`,
+        mount(el) {
+          const ST = GridArt.stations;                                  // 每站的插圖與說明在 gridart.js
+          const q = k => el.querySelector(`[data-o="${k}"]`);
+          const svg = q('grid'), art = q('art'), spots = q('spots'), prev = q('prev'), next = q('next');
+          let cur = 0;
+          const pos = i => (i < 5 ? [70 + i * 155, 60] : [70 + (9 - i) * 155, 175]);
+          const lineW = [5, 7, 7, 6, 5, 4, 4, 3, 3];                   // 線越粗表示電壓越高
+          let path = '';
+          ST.forEach((_, i) => { const [x, y] = pos(i); path += (i ? 'L' : 'M') + x + ' ' + y; });
+          let s = '';
+          for (let i = 0; i < 9; i++) {
+            const [x1, y1] = pos(i), [x2, y2] = pos(i + 1);
+            s += `<path d="M${x1} ${y1}L${x2} ${y2}" style="stroke:var(--copper);stroke-width:${lineW[i]};stroke-linecap:round;opacity:.75"/>`;
+          }
+          if (!prefersReducedMotion()) s += `<circle r="6" style="fill:var(--accent)"><animateMotion dur="6s" repeatCount="indefinite" path="${path}"/></circle>`;
+          ST.forEach(({ name, volt }, i) => {
+            const [x, y] = pos(i);
+            s += `<g class="stn" data-i="${i}" tabindex="0" role="button" aria-label="${name}，${volt}" style="cursor:pointer">
+              <circle cx="${x}" cy="${y}" r="24" style="fill:var(--surface);stroke:var(--ink);stroke-width:2.5"/>
+              <text x="${x}" y="${y + 5}" text-anchor="middle" style="font-family:var(--font-mono);font-size:15px;font-weight:700;fill:var(--ink)">${i + 1}</text>
+              <text x="${x}" y="${y + 44}" text-anchor="middle" class="schem-title">${name}</text>
+              <text x="${x}" y="${y + 61}" text-anchor="middle" class="schem-txt">${volt}</text></g>`;
+          });
+          svg.innerHTML = s;
+          // 點圖上的編號或下面的說明，兩邊一起標亮
+          const pick = n => {
+            art.querySelectorAll('.ga-pin').forEach(b => { const on = b.dataset.n === String(n); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+            spots.querySelectorAll('li').forEach(li => li.classList.toggle('on', li.dataset.n === String(n)));
+          };
+          const show = i => {
+            cur = i;
+            const st = ST[i], pic = st.art();
+            svg.querySelectorAll('.stn circle').forEach((c, k) => { c.style.fill = k === i ? 'var(--accent)' : 'var(--surface)'; });
+            q('no').textContent = `第 ${i + 1} 站`;
+            q('name').textContent = st.name;
+            q('volt').textContent = st.volt;
+            q('text').textContent = st.text;
+            art.innerHTML = `<svg viewBox="0 0 ${GridArt.W} ${GridArt.H}" role="img" aria-label="${st.alt}">${pic.svg}</svg>`;
+            pic.marks.forEach(([n, x, y]) => art.append(h('button', {
+              type: 'button', class: 'ga-pin', 'data-n': n, 'aria-pressed': 'false', 'aria-label': `${n}. ${st.spots[n - 1][0]}`,
+              style: { left: (x / GridArt.W * 100) + '%', top: (y / GridArt.H * 100) + '%' }, onclick: () => pick(n),
+            }, n)));
+            spots.replaceChildren(...st.spots.map(([t, d], k) => h('li', { 'data-n': k + 1, onclick: () => pick(k + 1) },
+              h('span', { class: 'spot-n', 'aria-hidden': 'true' }, k + 1), h('span', {}, h('b', {}, t), '：', d))));
+            prev.disabled = i === 0;
+            next.disabled = i === ST.length - 1;
+          };
+          svg.addEventListener('click', e => { const g = e.target.closest('.stn'); if (g) show(+g.dataset.i); });
+          svg.addEventListener('keydown', e => { const g = e.target.closest('.stn'); if (g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); show(+g.dataset.i); } });
+          prev.addEventListener('click', () => show(Math.max(0, cur - 1)));
+          next.addEventListener('click', () => show(Math.min(ST.length - 1, cur + 1)));
+          show(0);
+        },
+      },
+      {
+        title: '為什麼要用高壓輸電',
+        html: `
+        <div class="prose">
+          <p>假設要把 <b>100 MW</b>（十萬瓩）的電送過一條很長的線路，線路本身有電阻（這裡假設 5Ω）。功率 = 電壓 × 電流，所以<b>電壓越高、電流越小</b>；而線路發熱損失 = <b>電流² × 電阻</b>，電流小一半，損失就剩四分之一。選一個輸電電壓試試：</p>
+        </div>
+        <div class="row" role="group" aria-label="輸電電壓" data-o="volts"></div>
+        <div class="readouts">
+          <div class="readout"><div class="k">線路電流</div><div class="v" data-o="i"></div></div>
+          <div class="readout"><div class="k">線路發熱損失</div><div class="v" data-o="loss"></div></div>
+          <div class="readout"><div class="k">損失比例</div><div class="v" data-o="pct"></div></div>
+        </div>
+        <div class="loadbar" data-o="bar" title="損失比例"><i></i></div>
+        <div class="callout" data-o="msg"></div>
+        <p class="small muted">數字為示意：真實線路的電阻、長度與送電量都不同，但「電壓越高損失越小」的關係是一樣的。</p>`,
+        mount(el) {
+          const P = 100e6, R = 5;
+          const list = [[11000, '11kV'], [22800, '22.8kV'], [69000, '69kV'], [161000, '161kV'], [345000, '345kV']];
+          const box = el.querySelector('[data-o="volts"]');
+          const btns = list.map(([v, lab]) => {
+            const b = h('button', { type: 'button', class: 'btn btn-sm' }, lab);
+            b.addEventListener('click', () => set(v));
+            box.append(b);
+            return [v, b];
+          });
+          function set(V) {
+            btns.forEach(([v, b]) => b.classList.toggle('btn-primary', v === V));
+            const I = P / V, loss = I * I * R, pct = loss / P * 100;
+            el.querySelector('[data-o="i"]').textContent = Math.round(I).toLocaleString() + ' A';
+            el.querySelector('[data-o="loss"]').textContent = (loss / 1e6).toFixed(loss < 1e6 ? 2 : 1) + ' MW';
+            el.querySelector('[data-o="pct"]').textContent = pct > 100 ? '超過 100%' : pct.toFixed(pct < 1 ? 2 : 1) + '%';
+            const bar = el.querySelector('[data-o="bar"]');
+            bar.querySelector('i').style.width = Math.min(100, pct) + '%';
+            bar.className = 'loadbar' + (pct > 20 ? ' trip' : pct > 3 ? ' hot' : '');
+            const msg = el.querySelector('[data-o="msg"]');
+            if (pct >= 100) { msg.className = 'callout bad'; msg.innerHTML = '<b>根本送不出去！</b>損失比要送的電還多，電線會先燒掉。這就是為什麼不能用低電壓做長距離輸電。'; }
+            else if (pct > 3) { msg.className = 'callout warn'; msg.innerHTML = `損失 ${pct.toFixed(1)}%，太多了。電壓提高一級，損失就會大幅下降。`; }
+            else { msg.className = 'callout ok'; msg.innerHTML = `只損失 ${pct.toFixed(2)}%。電壓越高，鐵塔要越高、絕緣要越好、成本越貴，所以長距離用 345kV，到了用電區再一層層降壓，最後在電線桿上降到 110／220V 才安全進家門。`; }
+          }
+          set(11000);
+        },
+      },
+      {
         title: '台灣家裡的電：單相三線',
         html: `
         <div class="prose">
@@ -427,7 +539,7 @@ const LESSONS = {
         html: `
         <div class="prose">
           <p>導線分兩種寫法：<b>單心線</b>以直徑表示（1.6mm、2.0mm），<b>絞線</b>由多股細線絞成，以截面積表示（3.5mm²、5.5mm²、8mm²）。線越粗，能安全通過的電流越大。</p>
-          <p>實際要用多粗，要依負載電流、配線方式查規則中的安培容量表；一般住宅常見照明、插座分路用 2.0mm，冷氣等大電流專用迴路用 5.5mm² 以上。</p>
+          <p>實際要用多粗，要依負載電流和配線方式查規則的安培容量表。例如穿在 PVC 管內（同一管 3 條以下）：2.0mm 單線是 18A、5.5mm² 絞線是 25A。所以 20A 的插座分路要用 5.5mm²，2.0mm 只能配 15A 的斷路器。另外，照明、插座、電熱分路的電線最細只能用 2.0mm 單線或 3.5mm² 絞線。「迴路 06 居家用電規劃」有完整的選線練習。</p>
         </div>
         <div class="table-scroll"><table class="term-table">
           <thead><tr><th>顏色</th><th>用途</th><th>說明</th></tr></thead>
@@ -580,6 +692,10 @@ const Lessons = {
     const toc = h('nav', { class: 'toc', 'aria-label': '本章目錄' });
     const main = h('div', {});
     root.append(chapterHeader(ch, ch.sub), h('div', { class: 'lesson' }, toc, main));
+    // 課程卡的 mount 可以回傳清理函式（例如 3D 場景），換卡或離開時呼叫
+    let unmount = null;
+    const cleanup = () => { if (unmount) { try { unmount(); } catch (e) { /* 忽略 */ } unmount = null; } };
+    Page.onLeave(cleanup);
 
     const drawToc = () => {
       toc.replaceChildren(...L.cards.map((c, k) => h('button', {
@@ -603,6 +719,7 @@ const Lessons = {
       if (window.scrollY > top) window.scrollTo({ top, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
     };
     const draw = () => {
+      cleanup();
       if (cur === L.cards.length) {
         const qs = shuffle(QUESTIONS.filter(q => q.t === L.quiz.tag)).slice(0, L.quiz.n);
         const box = h('div', {});
@@ -635,7 +752,10 @@ const Lessons = {
         ),
       );
       main.replaceChildren(card);
-      if (c.mount) c.mount(card);
+      if (c.mount) {
+        const r = c.mount(card);
+        if (typeof r === 'function') unmount = r;
+      }
     };
     go(0);
   },
@@ -656,12 +776,12 @@ const Exam = {
     const box = h('div', {});
     root.append(box);
     const home = () => {
-      const tags = [['basics', '電學基礎'], ['gear', '器材與法規'], ['meter', '三用電表'], ['fault', '查修與安全'], ['common', '共同科目']];
+      const tags = [['basics', '電學基礎'], ['gear', '器材與法規'], ['meter', '三用電表'], ['fault', '查修與安全'], ['plan', '居家用電規劃'], ['common', '共同科目']];
       box.replaceChildren(h('div', { class: 'home-lower', style: { marginTop: 0 } },
         h('div', { class: 'card stack' },
           h('div', { class: 'eyebrow' }, '模擬考'),
           h('h2', {}, '隨機 30 題，全部作答完才公布答案'),
-          h('p', { class: 'muted' }, `題庫共 ${QUESTIONS.length} 題，涵蓋電學、法規、電表、查修與共同科目。正式學科 60 分及格；在這裡拿到 80 分以上，這個迴路才會通電。`),
+          h('p', { class: 'muted' }, `題庫共 ${QUESTIONS.length} 題，涵蓋電學、法規、電表、查修、用電規劃與共同科目。正式學科 60 分及格；在這裡拿到 80 分以上，這個迴路才會通電。`),
           Store.data.examBest != null ? h('p', {}, '目前最佳：', h('b', { class: 'num' }, Store.data.examBest), ' 分') : null,
           h('div', { class: 'row' }, h('button', { class: 'btn btn-primary', type: 'button', onclick: startExam }, '開始模擬考')),
         ),
@@ -684,7 +804,7 @@ const Exam = {
           Store.data.examBest = Math.max(Store.data.examBest || 0, score);
           Store.save();
           updateOverall();
-          if (score >= 80) toast('模擬考 80 分以上，迴路 06 通電！', 'ok');
+          if (score >= 80) toast('模擬考 80 分以上，迴路 07 通電！', 'ok');
         },
       });
     };
