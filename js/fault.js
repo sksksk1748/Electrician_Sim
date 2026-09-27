@@ -92,7 +92,7 @@ const Fault = (() => {
     const schem = h('div', { class: 'schem-wrap' });
     const side = h('aside', { class: 'stack' });
     const below = h('div', { class: 'stack' });
-    root.append(h('div', { class: 'fault' }, h('div', { class: 'stack' }, schem, below), side));
+    root.append(h('div', { class: 'fault' }, h('div', { class: 'stack' }, h('p', { class: 'scroll-hint' }, '↔ 線路圖可以左右滑動，右半邊還有燈和插座。'), schem, below), side));
 
     let st, fault, tool = 'volt', probes = [], reading = null, log = [], count = 0, violations = 0, sol = null, answered = null, lastKey = null;
 
@@ -312,7 +312,7 @@ const Fault = (() => {
       TPS.forEach(t => {
         const pi = probes.indexOf(t.id);
         const ring = tool !== 'pen' && tool !== 'clamp' && pi >= 0 ? `<circle cx="${t.x}" cy="${t.y}" r="15" style="fill:none;stroke:${pi === 0 ? 'var(--w-red)' : 'var(--ink)'};stroke-width:3"/>` : '';
-        s += `<g class="tp" data-tp="${t.id}" tabindex="0" role="button" aria-label="量測點 ${t.n} ${t.name}">${ring}<circle class="tp-dot" cx="${t.x}" cy="${t.y}" r="10"/><text x="${t.x}" y="${t.y + 4}" text-anchor="middle">${t.n}</text><title>${t.n} ${t.name}</title></g>`;
+        s += `<g class="tp" data-tp="${t.id}" tabindex="0" role="button" aria-label="量測點 ${t.n} ${t.name}"><circle class="tp-hit" cx="${t.x}" cy="${t.y}" r="19"/>${ring}<circle class="tp-dot" cx="${t.x}" cy="${t.y}" r="10"/><text x="${t.x}" y="${t.y + 4}" text-anchor="middle">${t.n}</text><title>${t.n} ${t.name}</title></g>`;
       });
       schem.innerHTML = `<svg viewBox="0 0 1000 520" role="img" aria-label="住宅線路圖">${s}</svg>`;
     }

@@ -336,6 +336,7 @@ const Wiring = (() => {
       h('section', { class: 'wb-main' },
         h('div', { class: 'toolbar' }, palette, h('div', { class: 'row' }, btnUndo, btnDel, btnClear, btnPower, btnGrade)),
         status,
+        h('p', { class: 'scroll-hint' }, '↔ 配線板可以左右滑動。先點一個端子，滑到另一邊再點另一個端子。'),
         board,
       ),
       side,
@@ -573,7 +574,7 @@ const Wiring = (() => {
       // 端子
       parts.forEach(p => partTerms(p).forEach(t => {
         const tg = sv('g', { class: 'term' + (pending === t.id ? ' pending' : ''), 'data-t': t.id, transform: `translate(${t.x},${t.y})` });
-        tg.append(sv('circle', { r: 13, class: 'term-hit' }), sv('circle', { r: 7.5, class: 'term-screw' }), sv('path', { d: 'M-4 -4L4 4', class: 'term-slot' }));
+        tg.append(sv('circle', { r: 16, class: 'term-hit' }), sv('circle', { r: 7.5, class: 'term-screw' }), sv('path', { d: 'M-4 -4L4 4', class: 'term-slot' }));
         if (!t.panel) tg.append(sv('text', { y: 26, 'text-anchor': 'middle', class: 'term-label' }, t.label));
         tg.append(sv('title', {}, termName(lv, t.id)));
         svg.append(tg);
