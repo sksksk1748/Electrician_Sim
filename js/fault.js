@@ -242,7 +242,7 @@ const Fault = (() => {
     /* ---------- 繪圖 ---------- */
     function drawSchem() {
       const wire = (d, c) => `<path d="${d}" class="wire-halo" style="stroke-width:6"/><path d="${d}" class="wire-core" style="stroke:${c};stroke-width:3.5"/>`;
-      const K = 'var(--w-black)', Wc = 'var(--w-white)', G = 'var(--w-green)';
+      const K = 'var(--w-red)', Wc = 'var(--w-white)', G = 'var(--w-green)';   // 火線畫紅色（和配線工坊一致）
       const hop = (x, y) => `M${x - 8} ${y}a8 8 0 0 1 16 0`;
       const brk = (x, y, w, hgt, stt, act, label, sub) => {
         const hy = stt === 'on' ? y + 14 : stt === 'trip' ? y + 26 : y + 38;

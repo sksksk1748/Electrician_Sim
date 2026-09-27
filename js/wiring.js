@@ -7,8 +7,8 @@ const Wiring = (() => {
   const W = 1000, H = 600;
 
   const COLORS = [
-    { k: 'black', name: '黑', css: 'var(--w-black)', hint: '火線 L / L1' },
-    { k: 'red', name: '紅', css: 'var(--w-red)', hint: '火線 L2 / 開關線' },
+    { k: 'red', name: '紅', css: 'var(--w-red)', hint: '火線 L / L1' },
+    { k: 'black', name: '黑', css: 'var(--w-black)', hint: '火線 L2 / 開關線' },
     { k: 'white', name: '白', css: 'var(--w-white)', hint: '中性線 N' },
     { k: 'green', name: '綠', css: 'var(--w-green)', hint: '接地 E' },
   ];
@@ -17,14 +17,14 @@ const Wiring = (() => {
 
   const PANEL_TERMS = {
     '1p2w': [
-      { k: 'L', dy: 210, label: 'L 火線', wire: 'black' },
+      { k: 'L', dy: 210, label: 'L 火線', wire: 'red' },
       { k: 'N', dy: 290, label: 'N 中性線', wire: 'white' },
       { k: 'E', dy: 430, label: 'E 接地', wire: 'green' },
     ],
     '1p3w': [
-      { k: 'L1', dy: 200, label: 'L1 火線', wire: 'black' },
+      { k: 'L1', dy: 200, label: 'L1 火線', wire: 'red' },
       { k: 'N', dy: 270, label: 'N 中性線', wire: 'white' },
-      { k: 'L2', dy: 340, label: 'L2 火線', wire: 'red' },
+      { k: 'L2', dy: 340, label: 'L2 火線', wire: 'black' },
       { k: 'E', dy: 430, label: 'E 接地', wire: 'green' },
     ],
   };
@@ -46,10 +46,10 @@ const Wiring = (() => {
       goal: '用開關 S1 控制燈 H1：開關 ON 燈亮，OFF 燈熄。',
       concept: '電流要從火線 L 出發，經過開關、經過燈，再回到中性線 N，繞成一圈才會亮，這一圈叫「迴路」。開關就是放在這條路上的一道門，而且這道門要放在<b>火線</b>那一側。',
       steps: [
-        '選<b>黑色</b>，點分電盤的 <b>L</b>，再點開關 S1 的端子 <b>1</b>。',
-        '仍用黑色，從 S1 的端子 <b>2</b> 拉到燈 H1 的<b>中心</b>端子（這段叫開關線）。',
+        '選<b>紅色</b>，點分電盤的 <b>L</b>（火線），再點開關 S1 的端子 <b>1</b>。',
+        '換<b>黑色</b>，從 S1 的端子 <b>2</b> 拉到燈 H1 的<b>中心</b>端子（這段叫開關線，經過開關後的火線）。',
         '選<b>白色</b>，從分電盤 <b>N</b> 拉到燈 H1 的<b>螺紋</b>端子。',
-        '按「送電」，點開關試試看，再按「檢查評分」。',
+        '點分電盤的<b>主開關</b>（或按「⚡ 送電」）送電，再把 S1 切到 <b>ON</b>，燈就會亮。最後按「檢查評分」。',
       ],
       learn: '這就是所有照明線路的基本型：<b>L → 開關 → 燈 → N</b>。術科題目再複雜，也都是這個形狀的變化。',
     },
@@ -60,8 +60,8 @@ const Wiring = (() => {
       goal: '開關 S1 控制燈 H1；插座 O1 不受開關控制，永遠有電，而且要接地。',
       concept: '插座和燈是<b>並聯</b>在 L、N 之間的兩個分支。插座直接接 L 和 N，不經過開關；插座的 E 端子要用<b>綠線</b>接到分電盤的接地。',
       steps: [
-        '先照第 1 關的方式接好燈：L →（黑）S1 →（黑）H1 中心，N →（白）H1 螺紋。',
-        '插座 O1 的 <b>L</b> 用黑線接到分電盤 L（可以從分電盤直接拉，也可以從 S1 的端子 1 分出去）。',
+        '先照第 1 關的方式接好燈：L →（紅）S1 →（黑）H1 中心，N →（白）H1 螺紋。',
+        '插座 O1 的 <b>L</b> 用紅線接到分電盤 L（可以從分電盤直接拉，也可以從 S1 的端子 1 分出去）。',
         '插座 O1 的 <b>N</b> 用白線接到分電盤 N（或從燈的螺紋端分出去）。',
         '插座 O1 的 <b>E</b> 用<b>綠線</b>接到分電盤 E。',
       ],
@@ -74,7 +74,7 @@ const Wiring = (() => {
       goal: '開關 S1 同時控制兩盞燈，而且兩盞都要全亮。',
       concept: '兩盞燈要<b>並聯</b>：每一盞的中心端都接到開關線，每一盞的螺紋端都接到 N。如果把兩盞燈頭尾相連（串聯），每盞只分到一半電壓，會很暗。',
       steps: [
-        'L →（黑）S1 端子 1。',
+        'L →（紅）S1 端子 1。',
         'S1 端子 2 →（黑）H1 中心，再從 H1 中心 →（黑）H2 中心。',
         'N →（白）H1 螺紋，再從 H1 螺紋 →（白）H2 螺紋。',
       ],
@@ -87,8 +87,8 @@ const Wiring = (() => {
       goal: '樓梯上下各有一個開關，兩個都能開關同一盞燈：不管燈現在亮不亮，切換任何一個開關都會讓燈改變。',
       concept: '三路開關的共同端 <b>C</b> 會輪流接到 <b>1</b> 或 <b>2</b>。兩個開關之間用兩條「跨接線」連起來：1 接 1、2 接 2。一個開關的 C 接火線，另一個開關的 C 接燈。',
       steps: [
-        'L →（黑）S1 的 <b>C</b>。',
-        'S1 的 1 →（紅）S2 的 1；S1 的 2 →（紅）S2 的 2（兩條跨接線）。',
+        'L →（紅）S1 的 <b>C</b>。',
+        'S1 的 1 →（黑）S2 的 1；S1 的 2 →（黑）S2 的 2（兩條跨接線）。',
         'S2 的 <b>C</b> →（黑）H1 中心。',
         'N →（白）H1 螺紋。',
       ],
@@ -101,9 +101,9 @@ const Wiring = (() => {
       goal: '三個地方控制同一盞燈：S1、S3、S2 任一個切換，燈都要改變。',
       concept: '四路開關夾在兩個三路開關的跨接線中間。它的 1、2 接一邊的跨接線，3、4 接另一邊；切換時在「平行（1–3、2–4）」與「交叉（1–4、2–3）」之間變換。',
       steps: [
-        'L →（黑）S1 的 C；S2 的 C →（黑）H1 中心；N →（白）H1 螺紋。',
-        'S1 的 1、2 →（紅）S3 的 1、2。',
-        'S3 的 3、4 →（紅）S2 的 1、2。',
+        'L →（紅）S1 的 C；S2 的 C →（黑）H1 中心；N →（白）H1 螺紋。',
+        'S1 的 1、2 →（黑）S3 的 1、2。',
+        'S3 的 3、4 →（黑）S2 的 1、2。',
       ],
       learn: 'n 處控制一燈 = 2 個三路開關 + (n − 2) 個四路開關。這是學科常考題。',
     },
@@ -115,8 +115,8 @@ const Wiring = (() => {
       concept: '指示燈的電阻非常大（約 100kΩ），把它<b>並聯在開關兩端</b>：開關 OFF 時，微小電流經過指示燈和燈泡，指示燈發光但大燈幾乎不亮；開關 ON 時指示燈兩端被短路，所以熄滅。',
       steps: [
         '照第 1 關接好 L → S1 → H1 中心、N → H1 螺紋。',
-        'PL1 的端子 1 接到 S1 的端子 1（黑）。',
-        'PL1 的端子 2 接到 S1 的端子 2（黑）。',
+        'PL1 的端子 1 接到 S1 的端子 1（紅，和 L 是同一段火線）。',
+        'PL1 的端子 2 接到 S1 的端子 2（黑，和開關線相通）。',
       ],
       learn: '這種開關俗稱「螢光開關」。它也是個好例子：同一條電路，元件電阻大小不同，分到的電壓就差很多（分壓）。',
     },
@@ -125,10 +125,10 @@ const Wiring = (() => {
       parts: [{ id: 'S1', type: 'sw1', x: 360, y: 360 }, { id: 'H1', type: 'lamp', x: 540, y: 40 }, { id: 'O2', type: 'out220', x: 760, y: 360 }],
       expect: s => ({ H1: s.S1 === 1 }), outlets: ['O2'],
       goal: '分電盤改成單相三線（L1、N、L2）。燈 H1 用 110V 並由 S1 控制；冷氣插座 O2 要拿到 220V 並接地。',
-      concept: 'L1–N、L2–N 是 110V，L1–L2 是 220V。冷氣插座的 X、Y 兩個端子要分別接 <b>L1（黑）</b>與 <b>L2（紅）</b>，不接 N。',
+      concept: 'L1–N、L2–N 是 110V，L1–L2 是 220V。冷氣插座的 X、Y 兩個端子要分別接 <b>L1（紅）</b>與 <b>L2（黑）</b>，不接 N。',
       steps: [
-        'L1 →（黑）S1 端子 1；S1 端子 2 →（黑）H1 中心；N →（白）H1 螺紋。',
-        'L1 →（黑）O2 的 X；L2 →（紅）O2 的 Y。',
+        'L1 →（紅）S1 端子 1；S1 端子 2 →（黑）H1 中心；N →（白）H1 螺紋。',
+        'L1 →（紅）O2 的 X；L2 →（黑）O2 的 Y。',
         'E →（綠）O2 的 E。',
       ],
       learn: '220V 迴路的兩條線都是火線，所以兩條都要受斷路器保護，不能只切一條。',
@@ -303,8 +303,8 @@ const Wiring = (() => {
       let ok, msg;
       if (isN) { ok = w.c === 'white'; msg = '中性線 N 要用白色'; }
       else if (isE) { ok = w.c === 'green'; msg = '接地線要用綠色'; }
-      else if (isL1 && lv.supply === '1p3w') { ok = w.c === 'black'; msg = 'L1 火線用黑色'; }
-      else if (isL2) { ok = w.c === 'red'; msg = 'L2 火線用紅色'; }
+      else if (isL1 && lv.supply === '1p3w') { ok = w.c === 'red'; msg = 'L1 火線用紅色'; }
+      else if (isL2) { ok = w.c === 'black'; msg = 'L2 火線用黑色'; }
       else if (isL1) { ok = w.c === 'black' || w.c === 'red'; msg = '火線不可用白色或綠色'; }
       else { ok = w.c === 'black' || w.c === 'red'; msg = '開關線、跨接線要用黑或紅，不可用白色或綠色'; }
       if (!ok) { colorIssues.add(msg); res.badWires.add(w.id); }
@@ -324,6 +324,8 @@ const Wiring = (() => {
     root.append(chapterHeader(ch, ch.sub));
     const strip = h('div', { class: 'lvl-strip', role: 'tablist', 'aria-label': '關卡' });
     const board = h('div', { class: 'board-wrap' });
+    const board3dBox = h('div', { class: 'board3d', hidden: true });
+    const scrollHint = h('p', { class: 'scroll-hint' }, '↔ 配線板可以左右滑動。先點一個端子，滑到另一邊再點另一個端子。');
     const status = h('div', { class: 'status-line', 'aria-live': 'polite' });
     const palette = h('div', { class: 'palette', role: 'group', 'aria-label': '電線顏色' });
     const btnUndo = h('button', { class: 'btn btn-sm', type: 'button' }, '復原');
@@ -331,18 +333,27 @@ const Wiring = (() => {
     const btnClear = h('button', { class: 'btn btn-sm btn-ghost', type: 'button' }, '清空');
     const btnPower = h('button', { class: 'btn btn-sm', type: 'button' }, '⚡ 送電');
     const btnGrade = h('button', { class: 'btn btn-sm btn-primary', type: 'button' }, '檢查評分');
+    /* 配線板兩種顯示方式：3D 工作台，或原本的平面配線板 */
+    const can3d = typeof Board3D !== 'undefined' && typeof Bench3D !== 'undefined' && Bench3D.supported();
+    const viewBtns = [['3d', '3D 工作台'], ['2d', '平面配線板']].map(([m, label]) =>
+      h('button', { type: 'button', 'data-view': m, 'aria-pressed': 'false', onclick: () => setView(m, true) }, label));
+    const viewSeg = h('div', { class: 'seg', role: 'group', 'aria-label': '配線板顯示方式' }, viewBtns);
     const side = h('aside', { class: 'wb-side' });
     root.append(strip, h('div', { class: 'wb' },
       h('section', { class: 'wb-main' },
+        h('div', { class: 'bench-head' }, h('h3', {}, '配線板'), can3d ? viewSeg : null),
         h('div', { class: 'toolbar' }, palette, h('div', { class: 'row' }, btnUndo, btnDel, btnClear, btnPower, btnGrade)),
         status,
-        h('p', { class: 'scroll-hint' }, '↔ 配線板可以左右滑動。先點一個端子，滑到另一邊再點另一個端子。'),
+        scrollHint,
         board,
+        board3dBox,
       ),
       side,
     ));
 
-    let lv, wires, states, live, pending, selWire, color = 'black', undo = [], lastGrade = null, liveA = null;
+    let lv, wires, states, live, pending, selWire, color = 'red', undo = [], lastGrade = null, liveA = null;
+    let powerHinted = false;           // 這一關是否已提醒過「要先送電」
+    let view = '2d', board3d = null, left = false;
     const svg = sv('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': '配線板' });
     board.append(svg);
     let rubber = null;
@@ -356,19 +367,29 @@ const Wiring = (() => {
           const w = wires.find(x => x.id === selWire);
           if (w) { pushUndo(); w.c = c.k; save(); }
         }
-        drawPalette(); draw();
+        drawPalette(); redraw();
       });
       palette.append(b);
     });
     const drawPalette = () => palette.querySelectorAll('.swatch').forEach(b => b.classList.toggle('cur', b.dataset.c === color));
+
+    /* 目前的顯示方式重畫一次 */
+    function redraw() {
+      if (!lv) return;
+      if (view === '3d') { if (board3d) board3d.sync(); }
+      else draw();
+    }
 
     function loadLevel(i) {
       lv = LEVELS[i];
       wires = (Store.data.wires[lv.id] || []).map(w => ({ ...w }));
       states = {};
       lv.parts.forEach(p => { if (p.type.startsWith('sw')) states[p.id] = 0; });
-      live = false; pending = null; selWire = null; undo = []; lastGrade = null; liveA = null;
-      drawStrip(); drawSide(); draw(); drawPalette(); setStatus();
+      live = false; pending = null; selWire = null; undo = []; lastGrade = null; liveA = null; powerHinted = false;
+      btnPower.textContent = '⚡ 送電';
+      btnPower.classList.remove('btn-danger');
+      btnDel.disabled = true;
+      drawStrip(); drawSide(); redraw(); drawPalette(); setStatus();
     }
     function drawStrip() {
       strip.replaceChildren(...LEVELS.map((L, i) => h('button', {
@@ -382,8 +403,9 @@ const Wiring = (() => {
       status.style.color = kind === 'bad' ? 'var(--bad)' : '';
       if (msg) { status.innerHTML = msg; return; }
       if (live) status.innerHTML = '<b>送電中</b>：點開關切換看看。要改配線請先斷電。';
-      else if (pending) status.innerHTML = `從 <b>${termName(lv, pending)}</b> 拉線中：點另一個端子完成，按 <span class="kbd">Esc</span> 取消。`;
+      else if (pending) status.innerHTML = `從 <b>${termName(lv, pending)}</b> 拉線中：點另一個端子完成，按 <span class="kbd">Esc</span> 或點空白處取消。`;
       else if (selWire) status.innerHTML = '已選取一條線：點顏色可改色，按「刪除選取的線」或 <span class="kbd">Delete</span> 刪除。';
+      else if (view === '3d') status.innerHTML = '點一個端子、再點另一個端子就能拉線，也可以直接從端子<b>拖曳</b>到另一個端子。拖曳空白處轉視角，滾輪或兩指縮放。';
       else status.innerHTML = '點一個端子開始拉線，再點另一個端子完成。先在上方選好電線顏色。';
     }
 
@@ -426,6 +448,7 @@ const Wiring = (() => {
           h('div', { class: 'row', style: { justifyContent: 'space-between' } }, h('h3', {}, pass ? '通過！' : '還沒通過'), h('span', { html: starsHTML(stars) })),
           h('ul', { class: 'result-list' }, items.map(x => h('li', { class: x.c }, h('span', { class: 'ic' }, x.ic), h('span', { html: x.t })))),
           h('div', { class: 'table-scroll' }, table),
+          h('p', { class: 'small muted', html: '評分時會自動模擬上表每一種開關組合，不需要先送電。想親眼看燈亮：點分電盤的<b>主開關</b>送電，再把開關切到 ON。' }),
           pass ? h('div', { class: 'callout ok small', html: '<b>學到了：</b>' + lv.learn }) : null,
           pass && idx + 1 < LEVELS.length ? h('button', { class: 'btn btn-primary', type: 'button', onclick: () => loadLevel(idx + 1) }, '下一關 →') : null,
           pass && idx + 1 === LEVELS.length ? h('a', { class: 'btn btn-primary', href: '#home' }, '全部完成，回配電盤') : null,
@@ -440,7 +463,7 @@ const Wiring = (() => {
       side.replaceChildren(...parts);
     }
 
-    /* 繪圖 */
+    /* ---------- 平面配線板 ---------- */
     function termPos(id) {
       for (const p of allParts()) for (const t of partTerms(p)) if (t.id === id) return t;
       return null;
@@ -584,11 +607,14 @@ const Wiring = (() => {
     }
 
     function flashTrip(msg) {
-      const g = sv('g', { class: 'trip-flash' });
-      g.innerHTML = `<rect width="${W}" height="${H}" fill="#E23B2E" opacity=".35"/>
-        <text x="${W / 2}" y="${H / 2}" text-anchor="middle" style="font-family:var(--font-display);font-size:54px;font-weight:700;fill:#fff;stroke:#7a120b;stroke-width:2">⚡ 短路跳脫！</text>`;
-      svg.append(g);
-      setTimeout(() => g.remove(), 1500);
+      if (view === '3d') { if (board3d) board3d.flashTrip(); }
+      else {
+        const g = sv('g', { class: 'trip-flash' });
+        g.innerHTML = `<rect width="${W}" height="${H}" fill="#E23B2E" opacity=".35"/>
+          <text x="${W / 2}" y="${H / 2}" text-anchor="middle" style="font-family:var(--font-display);font-size:54px;font-weight:700;fill:#fff;stroke:#7a120b;stroke-width:2">⚡ 短路跳脫！</text>`;
+        svg.append(g);
+        setTimeout(() => g.remove(), 1500);
+      }
       setStatus(msg, 'bad');
     }
 
@@ -601,12 +627,17 @@ const Wiring = (() => {
         btnPower.textContent = '⚡ 送電';
         btnPower.classList.remove('btn-danger');
         beep(140, 0.35, 'sawtooth', 0.06);
-        draw();
+        redraw();
         flashTrip(msg);
         return;
       }
-      draw();
-      setStatus();
+      redraw();
+      // 送電了但燈都沒亮：告訴使用者是開關還沒切，還是配線有問題
+      const lamps = lv.parts.filter(p => p.type === 'lamp');
+      if (lamps.length && !lamps.some(p => liveA.targets[p.id] === 'on')) {
+        const offs = lv.parts.filter(p => p.type === 'sw1' && !states[p.id]).map(p => p.id);
+        setStatus(`<b>送電中</b>：燈還沒亮。${offs.length ? `${offs.join('、')} 目前是 <b>OFF</b>，點開關切到 ON 看看。` : '切換開關看看；如果怎麼切都不亮，就是配線有問題，按「檢查評分」看哪裡錯。'}`);
+      } else setStatus();
     }
     function setPower(on) {
       if (on && !wires.length) { toast('板子上還沒有配線。'); return; }
@@ -614,58 +645,70 @@ const Wiring = (() => {
       btnPower.textContent = on ? '斷電' : '⚡ 送電';
       btnPower.classList.toggle('btn-danger', on);
       btnDel.disabled = true;
-      if (on) { beep(520, 0.06); evalLive(); } else { liveA = null; draw(); setStatus(); }
+      if (on) { beep(520, 0.06); evalLive(); } else { liveA = null; redraw(); setStatus(); }
     }
 
-    /* 互動 */
+    /* ---------- 操作（平面與 3D 共用） ---------- */
+    const busy = () => { toast('帶電中不可施工！請先斷電再改配線。', 'bad'); };
+    function addWire(a, b) {
+      if (wires.some(w => (w.a === a && w.b === b) || (w.b === a && w.a === b))) { toast('這兩個端子之間已經有一條線了。'); return; }
+      pushUndo();
+      const nid = 'w' + Date.now().toString(36) + Math.floor(Math.random() * 1e4);
+      wires.push({ id: nid, a, b, c: color });
+      save();
+      beep(1200, 0.03);
+    }
+    function clickTerminal(id) {
+      if (live) return busy();
+      selWire = null; btnDel.disabled = true;
+      if (!pending) { pending = id; beep(900, 0.02); }
+      else if (pending === id) pending = null;
+      else { addWire(pending, id); pending = null; }
+      redraw(); setStatus();
+    }
+    function connect(a, b) {
+      if (live) return busy();
+      selWire = null; btnDel.disabled = true; pending = null;
+      if (a !== b) addWire(a, b);
+      redraw(); setStatus();
+    }
+    function clickWire(id) {
+      if (live) return busy();
+      pending = null;
+      selWire = selWire === id ? null : id;
+      btnDel.disabled = !selWire;
+      redraw(); setStatus();
+    }
+    function clickSwitch(id) {
+      states[id] ^= 1;
+      beep(700, 0.03);
+      if (live) { evalLive(); return; }
+      redraw();
+      // 沒送電時切開關，燈當然不會亮：講清楚下一步
+      setStatus('<b>還沒送電</b>：開關切好了，但分電盤的主開關還是 OFF，所以燈不會亮。點分電盤的<b>主開關</b>（或按「⚡ 送電」）送電。');
+      if (!powerHinted) { powerHinted = true; toast('還沒送電：先點分電盤的主開關，燈才會亮。'); }
+    }
+    function clickBackground() {
+      if (!pending && !selWire) return;
+      pending = null; selWire = null; btnDel.disabled = true;
+      redraw(); setStatus();
+    }
+
     const toSvg = (ev) => {
       const pt = svg.createSVGPoint();
       pt.x = ev.clientX; pt.y = ev.clientY;
       return pt.matrixTransform(svg.getScreenCTM().inverse());
     };
     svg.addEventListener('click', (ev) => {
+      const act = ev.target.closest('[data-act]');
+      const sEl = ev.target.closest('[data-sw]');
       const tEl = ev.target.closest('[data-t]');
       const wEl = ev.target.closest('[data-w]');
-      const sEl = ev.target.closest('[data-sw]');
-      const act = ev.target.closest('[data-act]');
-      if (act) { setPower(!live); return; }
-      if (sEl) {
-        states[sEl.dataset.sw] ^= 1;
-        beep(700, 0.03);
-        if (live) evalLive(); else draw();
-        return;
-      }
-      if (live) {
-        if (tEl || wEl) toast('帶電中不可施工！請先斷電再改配線。', 'bad');
-        return;
-      }
-      if (tEl) {
-        const id = tEl.dataset.t;
-        selWire = null; btnDel.disabled = true;
-        if (!pending) { pending = id; beep(900, 0.02); }
-        else if (pending === id) pending = null;
-        else {
-          if (wires.some(w => (w.a === pending && w.b === id) || (w.b === pending && w.a === id))) toast('這兩個端子之間已經有一條線了。');
-          else {
-            pushUndo();
-            const nid = 'w' + Date.now().toString(36) + Math.floor(Math.random() * 1e4);
-            wires.push({ id: nid, a: pending, b: id, c: color });
-            save();
-            beep(1200, 0.03);
-          }
-          pending = null;
-        }
-        draw(); setStatus();
-        return;
-      }
-      if (wEl) {
-        pending = null;
-        selWire = selWire === wEl.dataset.w ? null : wEl.dataset.w;
-        btnDel.disabled = !selWire;
-        draw(); setStatus();
-        return;
-      }
-      if (pending || selWire) { pending = null; selWire = null; btnDel.disabled = true; draw(); setStatus(); }
+      if (act) return setPower(!live);
+      if (sEl) return clickSwitch(sEl.dataset.sw);
+      if (tEl) return clickTerminal(tEl.dataset.t);
+      if (wEl) return clickWire(wEl.dataset.w);
+      clickBackground();
     });
     svg.addEventListener('pointermove', (ev) => {
       if (!pending || !rubber) return;
@@ -680,7 +723,7 @@ const Wiring = (() => {
       pushUndo();
       wires = wires.filter(w => w.id !== selWire);
       selWire = null; btnDel.disabled = true;
-      save(); draw(); setStatus();
+      save(); redraw(); setStatus();
     }
     btnDel.addEventListener('click', delSel);
     btnUndo.addEventListener('click', () => {
@@ -688,7 +731,7 @@ const Wiring = (() => {
       if (!undo.length) return toast('沒有可以復原的步驟。');
       wires = JSON.parse(undo.pop());
       selWire = null; pending = null;
-      save(); draw(); setStatus();
+      save(); redraw(); setStatus();
     });
     let clearArmed = false;
     btnClear.addEventListener('click', () => {
@@ -696,7 +739,7 @@ const Wiring = (() => {
       if (!clearArmed) { clearArmed = true; btnClear.textContent = '再按一次確認清空'; setTimeout(() => { clearArmed = false; btnClear.textContent = '清空'; }, 2500); return; }
       clearArmed = false; btnClear.textContent = '清空';
       pushUndo(); wires = []; selWire = null; pending = null;
-      save(); draw(); setStatus();
+      save(); redraw(); setStatus();
     });
     btnPower.addEventListener('click', () => setPower(!live));
     btnGrade.addEventListener('click', () => {
@@ -713,21 +756,56 @@ const Wiring = (() => {
       } else {
         beep(220, 0.2, 'sawtooth', 0.03);
       }
-      drawStrip(); drawSide(); draw();
+      drawStrip(); drawSide(); redraw();
       if (window.matchMedia('(max-width: 1000px)').matches) side.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
     });
 
     const onKey = (e) => {
       if (e.target.closest && e.target.closest('input, textarea')) return;
-      if (e.key === 'Escape') { pending = null; selWire = null; btnDel.disabled = true; draw(); setStatus(); }
+      if (e.key === 'Escape') { pending = null; selWire = null; btnDel.disabled = true; redraw(); setStatus(); }
       else if ((e.key === 'Delete' || e.key === 'Backspace') && selWire) { e.preventDefault(); delSel(); }
       else if (['1', '2', '3', '4'].includes(e.key)) { const c = COLORS[+e.key - 1]; palette.querySelector(`[data-c="${c.k}"]`).click(); }
     };
     document.addEventListener('keydown', onKey);
     Page.onLeave(() => document.removeEventListener('keydown', onKey));
 
+    /* ---------- 3D 工作台 ---------- */
+    const api3d = {
+      DEFS, PANEL_TERMS, partTerms,
+      getModel: () => ({ lv, parts: allParts(), wires, states, live, liveA, pending, selWire, color, badWires: lastGrade ? lastGrade.badWires : null }),
+      onTerminal: clickTerminal,
+      onConnect: connect,
+      onWire: clickWire,
+      onSwitch: clickSwitch,
+      onPower: () => setPower(!live),
+      onBackground: clickBackground,
+    };
+    function setView(m, remember) {
+      if (m === '3d' && !can3d) m = '2d';
+      view = m;
+      if (remember) { try { localStorage.setItem('peixian-dojo-wiring-view', m); } catch (e) { /* 忽略 */ } }
+      viewBtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.view === m ? 'true' : 'false'));
+      board.hidden = m !== '2d';
+      scrollHint.hidden = m !== '2d';
+      board3dBox.hidden = m !== '3d';
+      if (m === '3d' && !board3d) {
+        board3d = Board3D.create(board3dBox, api3d);
+        board3d.ready.catch(() => {
+          if (left) return;
+          board3d = null;
+          toast('3D 配線板載入失敗（需要網路連線），先改用平面配線板。', 'bad');
+          setView('2d', false);
+        });
+      }
+      redraw(); setStatus();
+    }
+    Page.onLeave(() => { left = true; if (board3d) board3d.dispose(); board3d = null; });
+
     const firstOpen = LEVELS.findIndex(L => !(Store.data.stars[L.id] > 0));
     loadLevel(firstOpen < 0 ? 0 : firstOpen);
+    let savedView = null;
+    try { savedView = localStorage.getItem('peixian-dojo-wiring-view'); } catch (e) { /* 忽略 */ }
+    setView(savedView === '2d' || !can3d ? '2d' : '3d', false);
   }
 
   function progress() {

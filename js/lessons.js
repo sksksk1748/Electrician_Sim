@@ -283,9 +283,9 @@ const LESSONS = {
             <text x="75" y="22" text-anchor="middle" class="schem-title">台電變壓器</text>
             <path d="M60 50c16 0 16 20 0 20c16 0 16 20 0 20c16 0 16 20 0 20c16 0 16 20 0 20c16 0 16 20 0 20c16 0 16 20 0 20" style="fill:none;stroke:var(--ink);stroke-width:2.5"/>
             <path d="M60 50H130M60 110H130M60 170H130" style="stroke:var(--ink-3);stroke-width:1.5"/>
-            <path d="M130 50H560" class="wire-halo"/><path d="M130 50H560" class="wire-core" style="stroke:var(--w-black)"/>
+            <path d="M130 50H560" class="wire-halo"/><path d="M130 50H560" class="wire-core" style="stroke:var(--w-red)"/>
             <path d="M130 110H560" class="wire-halo"/><path d="M130 110H560" class="wire-core" style="stroke:var(--w-white)"/>
-            <path d="M130 170H560" class="wire-halo"/><path d="M130 170H560" class="wire-core" style="stroke:var(--w-red)"/>
+            <path d="M130 170H560" class="wire-halo"/><path d="M130 170H560" class="wire-core" style="stroke:var(--w-black)"/>
             <path d="M60 110v70M44 186h32M50 194h20M56 202h8" style="stroke:var(--w-green);stroke-width:2.5;fill:none"/>
             <text x="570" y="55" class="schem-title">L1</text><text x="570" y="115" class="schem-title">N</text><text x="570" y="175" class="schem-title">L2</text>
             <path d="M300 56v48M300 116v48" style="stroke:var(--copper);stroke-width:2;marker-end:none"/>
@@ -346,10 +346,10 @@ const LESSONS = {
             let body = `<rect x="20" y="80" width="70" height="80" rx="6" class="schem-box"/><text x="55" y="118" text-anchor="middle" class="schem-title">110V</text>
               <text x="55" y="138" text-anchor="middle" class="schem-txt">插座</text>`;
             if (mode === 'series') {
-              body += wire('M90 100H220', 'var(--w-black)') + wire('M260 100H360', 'var(--w-black)') + wire('M400 100H480V180H90V140', 'var(--w-white)');
+              body += wire('M90 100H220', 'var(--w-red)') + wire('M260 100H360', 'var(--w-red)') + wire('M400 100H480V180H90V140', 'var(--w-white)');
               body += lampAt(240, 100, pA / 60, 'A', rm.checked) + lampAt(380, 100, pB / 60, 'B', false);
             } else {
-              body += wire('M90 100H480V130M300 100V130', 'var(--w-black)') + wire('M90 140H150V200H480V170M300 200V170', 'var(--w-white)');
+              body += wire('M90 100H480V130M300 100V130', 'var(--w-red)') + wire('M90 140H150V200H480V170M300 200V170', 'var(--w-white)');
               body += lampAt(300, 150, pA / 60, 'A', rm.checked, true) + lampAt(480, 150, pB / 60, 'B', false, true);
             }
             svg.innerHTML = body;
@@ -432,13 +432,13 @@ const LESSONS = {
         <div class="table-scroll"><table class="term-table">
           <thead><tr><th>顏色</th><th>用途</th><th>說明</th></tr></thead>
           <tbody>
-            <tr><td><span class="chip-wire" style="background:var(--w-black)"></span>黑</td><td>火線 L／L1</td><td>帶電的線（非接地導線）</td></tr>
-            <tr><td><span class="chip-wire" style="background:var(--w-red)"></span>紅</td><td>火線 L2</td><td>單相三線的另一條火線；也常用在開關線</td></tr>
+            <tr><td><span class="chip-wire" style="background:var(--w-red)"></span>紅</td><td>火線 L／L1</td><td>帶電的線（非接地導線）</td></tr>
+            <tr><td><span class="chip-wire" style="background:var(--w-black)"></span>黑</td><td>火線 L2、開關線</td><td>單相三線的另一條火線；也常用在開關線、跨接線</td></tr>
             <tr><td><span class="chip-wire" style="background:var(--w-white)"></span>白</td><td>中性線 N</td><td>被接地導線，<b>火線不可用白色</b></td></tr>
             <tr><td><span class="chip-wire" style="background:var(--w-green)"></span>綠</td><td>接地線 E</td><td>只能當接地線，<b>其他用途不可用綠色</b></td></tr>
           </tbody>
         </table></div>
-        <div class="callout">配線工坊會照這四種顏色評分：中性線用白、接地用綠、火線用黑（L2 用紅），開關線用黑或紅。</div>`,
+        <div class="callout">規則要求中性線用白（或灰）、接地線用綠；兩條火線用紅、黑區分，不可用白或綠。配線工坊統一：<b>L1 用紅、L2 用黑</b>，開關線與跨接線用黑或紅。</div>`,
       },
       {
         title: '開關家族：單切、三路、四路',
