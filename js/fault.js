@@ -90,11 +90,22 @@ const Fault = (() => {
     const ch = CHAPTERS.find(c => c.id === 'fault');
     root.append(chapterHeader(ch, ch.sub));
     const schem = h('div', { class: 'schem-wrap' });
+    const scene3dBox = h('div', { class: 'board3d fault3d', hidden: true });
+    const scrollHint = h('p', { class: 'scroll-hint' }, '↔ 線路圖可以左右滑動，右半邊還有燈和插座。');
     const side = h('aside', { class: 'stack' });
     const below = h('div', { class: 'stack' });
-    root.append(h('div', { class: 'fault' }, h('div', { class: 'stack' }, h('p', { class: 'scroll-hint' }, '↔ 線路圖可以左右滑動，右半邊還有燈和插座。'), schem, below), side));
+    /* 兩種顯示方式：3D 住家場景，或原本的線路圖 */
+    const can3d = typeof Fault3D !== 'undefined' && typeof Bench3D !== 'undefined' && Bench3D.supported();
+    const viewBtns = [['3d', '3D 工作台'], ['2d', '線路圖']].map(([m, label]) =>
+      h('button', { type: 'button', 'data-view': m, 'aria-pressed': 'false', onclick: () => setView(m, true) }, label));
+    const viewSeg = h('div', { class: 'seg', role: 'group', 'aria-label': '顯示方式' }, viewBtns);
+    root.append(h('div', { class: 'fault' },
+      h('div', { class: 'stack' }, h('div', { class: 'bench-head' }, h('h3', {}, '現場'), can3d ? viewSeg : null), scrollHint, schem, scene3dBox, below),
+      side));
 
     let st, fault, tool = 'volt', probes = [], reading = null, log = [], count = 0, violations = 0, sol = null, answered = null, lastKey = null;
+    let view = '2d', fault3d = null, left = false;
+    let lastPen = null, lastClamp = null;          // 檢電起子最後碰的點、鉤表最後夾的線（3D 場景用來擺出工具）
 
     function newCase() {
       const keys = Object.keys(FAULTS).filter(k => k !== lastKey);
@@ -105,7 +116,7 @@ const Fault = (() => {
         s1: fault.group === 'lamp' || fault.key === 'short_socket' ? 1 : 0,
         kettle: fault.group === 'outlet' || fault.key === 'leak_app',
       };
-      probes = []; reading = null; log = []; count = 0; violations = 0; answered = null;
+      probes = []; reading = null; log = []; count = 0; violations = 0; answered = null; lastPen = null; lastClamp = null;
       const msgs = energize();
       if (msgs.length) pushLog('— ' + msgs.join('；'));
       drawAll();
@@ -167,7 +178,7 @@ const Fault = (() => {
         beep(140, 0.3, 'sawtooth', 0.05);
         pushLog(`— ${label}：${msgs.join('；')}`);
       } else pushLog(`— ${label}`);
-      reading = null;
+      reading = null; lastPen = null; lastClamp = null;
       drawAll();
     }
     const brkLabel = { on: 'ON', off: 'OFF', trip: '跳脫' };
@@ -183,6 +194,7 @@ const Fault = (() => {
         count++;
         const glow = sol && Math.abs(V(id)) > 60;
         reading = { mode: '檢電起子', val: glow ? '亮' : '不亮', sub: `${circ(tp(id).n)} ${tp(id).name}`, pen: glow };
+        lastPen = { id, glow: !!glow };
         if (glow) beep(1500, 0.05, 'sine', 0.03);
         pushLog(`檢電 ${circ(tp(id).n)}：${glow ? '亮' : '不亮'}`);
         drawAll();
@@ -230,9 +242,13 @@ const Fault = (() => {
       let I = 0;
       if (sol) {
         const c = id => sol.I(id);
-        I = { b1l: c('w1'), b1ln: c('w1') - c('w3'), b2l: c('w4'), b2ln: c('w4') + c('w5'), cord: st.plug ? c('cordL') + c('cordN') : 0 }[k];
+        I = {
+          b1l: c('w1'), b1ln: c('w1') - c('w3'), b2l: c('w4'), b2ln: c('w4') + c('w5'), cord: st.plug ? c('cordL') + c('cordN') : 0,
+          w2: c('w2'), w3: c('w3'), w5: c('w5'), w6: c('w6'),     // 3D 場景可以直接夾單一條線
+        }[k] || 0;
       }
       I = Math.abs(I);
+      lastClamp = k;
       const txt = I < 0.0005 ? '0.0 mA' : I < 1 ? (I * 1000).toFixed(0) + ' mA' : I.toFixed(2) + ' A';
       reading = { mode: '鉤表 A~', val: txt, sub: label };
       pushLog(`鉤表 ${label}：${txt}`);
@@ -267,7 +283,7 @@ const Fault = (() => {
       s += wire('M36 470H290', G) + `<path d="M36 470v16M24 486h24M28 493h16M32 500h8" style="stroke:var(--w-green);stroke-width:2.5;fill:none"/>`;
       s += `<text x="52" y="462" class="schem-txt">接地銅排</text>`;
       // 分路 1
-      s += wire('M290 210H330V120H450', K) + wire('M530 120H780', K) + wire('M780 250H290', Wc);
+      s += wire('M290 210H330V120H450', K) + wire('M530 120H780', 'var(--w-black)') + wire('M780 250H290', Wc);   // 開關線用黑色
       const s1on = st.s1 === 1;
       s += `<g class="clickable" data-act="s1" tabindex="0" role="button" aria-label="開關 S1 ${s1on ? 'ON' : 'OFF'}">
         <rect x="436" y="78" width="108" height="60" rx="8" style="fill:transparent"/>
@@ -326,13 +342,13 @@ const Fault = (() => {
       ));
       const toolBtns = h('div', { class: 'tools' }, TOOLS.map(t => h('button', {
         type: 'button', class: 'tool-btn' + (tool === t.k ? ' cur' : ''), title: t.desc,
-        onclick: () => { tool = t.k; probes = []; reading = null; drawAll(); },
+        onclick: () => { tool = t.k; probes = []; reading = null; lastPen = null; lastClamp = null; drawAll(); },
       }, h('span', { html: t.icon }), t.name)));
       const T = TOOLS.find(t => t.k === tool);
       const lcd = h('div', { class: 'lcd' + (reading && reading.danger ? ' danger' : '') },
         h('div', { class: 'lcd-mode' }, reading ? reading.mode : T.name),
         h('div', { class: 'lcd-val' }, reading ? reading.val : '— —'),
-        h('div', { class: 'lcd-sub' }, reading ? reading.sub : (tool === 'pen' ? '點線路圖上的量測點' : tool === 'clamp' ? '選擇要夾的電線' : probes.length === 1 ? `紅棒在 ${circ(tp(probes[0]).n)}，再點第二個點` : '點兩個量測點（紅棒、黑棒）')),
+        h('div', { class: 'lcd-sub' }, reading ? reading.sub : (tool === 'pen' ? '點一個數字量測點' : tool === 'clamp' ? (view === '3d' ? '點場景裡的電線，或選下面的夾法' : '選擇要夾的電線') : probes.length === 1 ? `紅棒在 ${circ(tp(probes[0]).n)}，再點第二個點` : '點兩個量測點（紅棒、黑棒）')),
       );
       const clampOpts = tool === 'clamp' ? h('div', { class: 'ctrl-grid' },
         [['b1l', '分路1 火線'], ['b1ln', '分路1 L+N 一起夾'], ['b2l', '分路2 火線'], ['b2ln', '分路2 L+N 一起夾'], ['cord', '熱水壺電線 L+N']].map(([k, l]) =>
@@ -349,7 +365,7 @@ const Fault = (() => {
           ctrl('總開關', brkLabel[st.main], 'main'), ctrl('分路1', brkLabel[st.b1], 'b1'), ctrl('分路2', brkLabel[st.b2], 'b2'),
           ctrl('S1', st.s1 ? 'ON' : 'OFF', 's1'), ctrl('插頭', st.plug ? '插上' : '拔下', 'plug'), ctrl('熱水壺', st.kettle ? 'ON' : 'OFF', 'kettle'),
           h('button', { type: 'button', class: 'btn btn-sm', onclick: () => doAct('test') }, '按測試鈕 T')),
-        h('p', { class: 'tiny muted' }, '線路圖上的開關、斷路器、插頭也可以直接點。'),
+        h('p', { class: 'tiny muted' }, view === '3d' ? '也可以直接點場景裡的斷路器、黃色測試鈕、牆上開關、插頭和熱水壺。' : '線路圖上的開關、斷路器、插頭也可以直接點。'),
       ));
       if (!answered) {
         const opts = fault.group === 'trip'
@@ -388,7 +404,7 @@ const Fault = (() => {
       below.replaceChildren(
         h('div', { class: 'card stack' },
           h('div', { class: 'row', style: { justifyContent: 'space-between' } }, h('h3', {}, '量測紀錄'), h('span', { class: 'tiny muted' }, '最新的在最上面')),
-          log.length ? h('ul', { class: 'log' }, log.map((t, i) => h('li', { class: i === 0 ? 'new' : '' }, t))) : h('p', { class: 'small muted' }, '還沒有紀錄。選一個儀表，點線路圖上的數字量測點開始。'),
+          log.length ? h('ul', { class: 'log' }, log.map((t, i) => h('li', { class: i === 0 ? 'new' : '' }, t))) : h('p', { class: 'small muted' }, '還沒有紀錄。選一個儀表，點數字量測點開始。'),
         ),
         h('details', { class: 'card hint' },
           h('summary', {}, '儀表使用說明'),
@@ -402,7 +418,11 @@ const Fault = (() => {
         ),
       );
     }
-    function drawAll() { drawSchem(); drawSide(); drawBelow(); }
+    function drawAll() {
+      if (view === '3d') { if (fault3d) fault3d.sync(); }
+      else drawSchem();
+      drawSide(); drawBelow();
+    }
 
     function doAct(act) {
       if (act === 'main') return toggleBrk('main', '總開關');
@@ -450,7 +470,42 @@ const Fault = (() => {
       drawAll();
     }
 
+    /* ---------- 3D 工作台 ---------- */
+    const api3d = {
+      TPS,
+      getModel: () => ({ st, tool, probes, lastPen, lastClamp, lampOn: !!lampOn(), kettleHot: !!kettleHot() }),
+      onTP: id => {
+        if (tool === 'clamp') return toast('鉤表要夾在電線上：點場景裡的電線，或在右邊選擇夾法。');
+        measureAt(id);
+      },
+      onAct: doAct,
+      onClamp: (k, label) => clampAt(k, label),
+    };
+    function setView(m, remember) {
+      if (m === '3d' && !can3d) m = '2d';
+      view = m;
+      if (remember) { try { localStorage.setItem('peixian-dojo-fault-view', m); } catch (e) { /* 忽略 */ } }
+      viewBtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.view === m ? 'true' : 'false'));
+      schem.hidden = m !== '2d';
+      scrollHint.hidden = m !== '2d';
+      scene3dBox.hidden = m !== '3d';
+      if (m === '3d' && !fault3d) {
+        fault3d = Fault3D.create(scene3dBox, api3d);
+        fault3d.ready.catch(() => {
+          if (left) return;
+          fault3d = null;
+          toast('3D 場景載入失敗（需要網路連線），先改用線路圖。', 'bad');
+          setView('2d', false);
+        });
+      }
+      if (fault) drawAll();
+    }
+    Page.onLeave(() => { left = true; if (fault3d) fault3d.dispose(); fault3d = null; });
+
     newCase();
+    let savedView = null;
+    try { savedView = localStorage.getItem('peixian-dojo-fault-view'); } catch (e) { /* 忽略 */ }
+    setView(savedView === '2d' || !can3d ? '2d' : '3d', false);
   }
 
   function progress() { return Math.min(1, (Store.data.faultSolved || 0) / 4); }

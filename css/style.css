@@ -520,6 +520,18 @@ details.hint[open] summary { margin-bottom: 8px; }
   font-family: var(--font-display); font-size: clamp(28px, 5vw, 52px); font-weight: 700;
 }
 .b3d-flash.go { animation: trip 1.4s ease-out forwards; }
+.b3d-state.bad { background: var(--bad); color: #fff; }
+
+/* 3D 故障偵探：量測點編號 */
+.b3d-tp {
+  min-width: 20px; padding: 0 5px; text-align: center;
+  font-family: var(--font-mono); font-size: 11px; line-height: 18px;
+  background: var(--ink); color: var(--bg); opacity: .9;
+}
+.b3d-tp.red { background: var(--w-red); color: #fff; opacity: 1; }
+.b3d-tp.black { background: #1b1b1b; color: #fff; box-shadow: 0 0 0 2px var(--accent); opacity: 1; }
+.b3d-labels.narrow .b3d-tp { font-size: 10px; min-width: 15px; line-height: 14px; padding: 0 3px; }
+.b3d-labels.narrow .b3d-label:not(.b3d-tp) { font-size: 10.5px; padding: 0 6px; }
 
 .answer-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .answer-row input { width: 130px; min-height: 40px; padding: 6px 10px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--surface); font-family: var(--font-mono); font-size: 16px; }
