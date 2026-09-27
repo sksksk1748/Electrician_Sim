@@ -1,0 +1,7 @@
+# 本機預覽設定（含個人電腦上的路徑）
+.claude/
+
+# 系統產生的檔案
+Thumbs.db
+Desktop.ini
+.DS_Store
