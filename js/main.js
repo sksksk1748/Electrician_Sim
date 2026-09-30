@@ -4,16 +4,18 @@ const CHAPTERS = [
   { id: 'basics', no: 1, name: '電的基礎', sub: '電壓、電流、電阻、功率，還有電為什麼危險', rating: '15A', desc: '用水管比喻看懂電，拉滑桿體會歐姆定律與過載。' },
   { id: 'gear', no: 2, name: '器材與安全', sub: '斷路器、電線顏色、開關、燈座插座與安全作業', rating: '20A', desc: '認識分電盤、線色規定、三路四路開關與停電作業順序。' },
   { id: 'wiring', no: 3, name: '配線工坊', sub: '七個關卡：從一燈一開關到三路、四路開關與 220V', rating: '20A', desc: '在配線板上親手拉線、送電測試，系統會逐一檢查每種開關組合。' },
-  { id: 'meter', no: 4, name: '三用電表', sub: '選檔位、讀刻度、零歐姆調整，量電壓與電阻', rating: '20A', desc: '操作指針式三用電表，練到會讀刻度、不打表、不燒保險絲。' },
-  { id: 'fault', no: 5, name: '故障偵探', sub: '用電表、絕緣電阻計、檢電起子與鉤表找出故障', rating: '30A', desc: '接客戶報修，量測後判斷是斷路、短路還是漏電。' },
-  { id: 'plan', no: 6, name: '居家用電規劃', sub: '生活中的串聯並聯、電盤能帶多少電器、銅線怎麼選', rating: '30A', desc: '把電器分配到各分路不跳電，替每條迴路選對線徑與斷路器。' },
-  { id: 'exam', no: 7, name: '學科模擬考', sub: '題庫隨機出題，80 分以上代表準備好了', rating: '30A', desc: '電學、法規、電表、查修、用電規劃與共同科目綜合模擬。' },
+  { id: 'box', no: 4, name: '電箱工坊', sub: '組裝端子台，把三相四線 220/380V 接進電箱', rating: '30A', desc: '端子台組裝、三相進線、馬達正反轉與單相分路的負載平衡。' },
+  { id: 'meter', no: 5, name: '三用電表', sub: '選檔位、讀刻度、零歐姆調整，量電壓與電阻', rating: '20A', desc: '操作指針式三用電表，練到會讀刻度、不打表、不燒保險絲。' },
+  { id: 'fault', no: 6, name: '故障偵探', sub: '用電表、絕緣電阻計、檢電起子與鉤表找出故障', rating: '30A', desc: '接客戶報修，量測後判斷是斷路、短路還是漏電。' },
+  { id: 'plan', no: 7, name: '居家用電規劃', sub: '生活中的串聯並聯、電盤能帶多少電器、銅線怎麼選', rating: '30A', desc: '把電器分配到各分路不跳電，替每條迴路選對線徑與斷路器。' },
+  { id: 'exam', no: 8, name: '學科模擬考', sub: '題庫隨機出題，80 分以上代表準備好了', rating: '30A', desc: '電學、法規、三相、電表、查修、用電規劃與共同科目綜合模擬。' },
 ];
 
 function chapterProgress(id) {
   switch (id) {
     case 'basics': case 'gear': case 'plan': return Lessons.progress(id);
     case 'wiring': return Wiring.progress();
+    case 'box': return BoxShop.progress();
     case 'meter': return MeterLab.progress();
     case 'fault': return Fault.progress();
     case 'exam': return Exam.progress();
@@ -52,7 +54,7 @@ function renderHome(root) {
   root.append(
     h('section', { class: 'hero' },
       h('h1', {}, '配線道場', h('span', { class: 'spec' }, '室內配線丙級')),
-      h('p', {}, '給完全沒有電學背景的人。七個迴路依序通電：先懂電，再認器材，接著親手配線、操作三用電表、查出故障、規劃居家用電，最後用模擬考檢驗自己。每完成一章，那一路的開關就會切到 ON。'),
+      h('p', {}, '給完全沒有電學背景的人。八個迴路依序通電：先懂電，再認器材，接著親手配線、組裝三相電箱、操作三用電表、查出故障、規劃居家用電，最後用模擬考檢驗自己。每完成一章，那一路的開關就會切到 ON。'),
     ),
     h('section', { class: 'enclosure', 'aria-label': '學習進度配電盤' },
       h('div', { class: 'enclosure-plate' }, '1φ3W 110/220V · 學習分電盤'),
@@ -63,17 +65,10 @@ function renderHome(root) {
             h('div', { class: 'b-top' }, h('span', {}, '總開關'), h('span', {}, 'ELCB 30mA')),
             h('div', { class: 'main-row' },
               h('span', { class: 'main-pct' }, pct + '%'),
-              h('span', { class: 'b-desc' }, next ? `下一步：迴路 ${String(next.no).padStart(2, '0')}「${next.name}」` : '七個迴路全部通電。可以去報名考試了，考前再多做幾次模擬考。')),
+              h('span', { class: 'b-desc' }, next ? `下一步：迴路 ${String(next.no).padStart(2, '0')}「${next.name}」` : '八個迴路全部通電。可以去報名考試了，考前再多做幾次模擬考。')),
           ),
         ),
-        h('div', { class: 'branches' }, CHAPTERS.map(breakerCard),
-          // 真的分電盤常會留一格備用
-          h('div', { class: 'breaker spare', 'aria-hidden': 'true' },
-            h('div', { class: 'b-top' }, h('span', {}, '迴路 08'), h('span', {}, '—')),
-            h('div', { class: 'b-name' }, '預備'),
-            h('div', { class: 'b-desc' }, '分電盤通常會留幾個空位，以後加裝冷氣或電熱水器時用。'),
-            h('div', { class: 'b-foot' }, h('div', { class: 'b-handle-wrap' }, h('span', { class: 'b-slot' }), h('span', { class: 'b-state' }, '空位'))),
-          )),
+        h('div', { class: 'branches' }, CHAPTERS.map(breakerCard)),
       ),
     ),
     h('section', { class: 'home-lower' },
@@ -106,6 +101,7 @@ const ROUTES = {
   basics: root => Lessons.render(root, 'basics'),
   gear: root => Lessons.render(root, 'gear'),
   wiring: root => Wiring.render(root),
+  box: root => BoxShop.render(root),
   meter: root => MeterLab.render(root),
   fault: root => Fault.render(root),
   plan: root => Lessons.render(root, 'plan'),

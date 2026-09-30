@@ -37,6 +37,7 @@
   --w-red: #D0312D;
   --w-white: #F7F7F2;
   --w-green: #2A9D4B;
+  --w-blue: #2463C6;
   --focus: #1D6FD1;
   --font-display: "Chiron GoRound TC", "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", sans-serif;
   --font-body: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", "Heiti TC", sans-serif;
@@ -506,6 +507,24 @@ details.hint[open] summary { margin-bottom: 8px; }
 .wire-sel { stroke: var(--focus); stroke-width: 12; fill: none; opacity: .45; stroke-linecap: round; }
 .rubber { stroke-width: 3.5; fill: none; stroke-dasharray: 8 6; pointer-events: none; }
 .trip-flash { animation: trip 1.4s ease-out forwards; pointer-events: none; }
+
+/* 電箱工坊：端子台零件盒、馬達風扇 */
+.asm-tray { display: flex; flex-wrap: wrap; gap: 8px; }
+.asm-part { display: grid; justify-items: center; gap: 4px; min-width: 96px; padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--surface); font-size: 13px; font-weight: 500; }
+.asm-part:hover { border-color: var(--accent); }
+.asm-ic { display: block; width: 44px; height: 30px; border-radius: 4px; }
+.asm-ic.rail { height: 12px; margin: 9px 0; background: repeating-linear-gradient(90deg, #aeb5bb 0 14px, #7d858c 14px 17px); }
+.asm-ic.stop { width: 16px; background: #3f4448; }
+.asm-ic.tb { width: 20px; background: #cfd3cf; box-shadow: inset 0 0 0 1.5px #7d8580; }
+.asm-ic.pe { width: 20px; background: repeating-linear-gradient(45deg, #2a9d4b 0 5px, #e8c93a 5px 10px); }
+.asm-ic.end { width: 6px; background: #9ea4a0; }
+.asm-ic.mark { width: 40px; height: 14px; margin: 8px 0; background: #fff; box-shadow: inset 0 0 0 1.5px #8a908b; }
+.asm-list li.cur .ic { color: var(--accent-ink); background: var(--accent); border-radius: 50%; text-align: center; }
+.board-wrap.asm-wrap svg { width: 100%; max-width: 100%; }
+.box-fan { transform-box: fill-box; transform-origin: center; }
+.box-fan.spin { animation: fan-spin .7s linear infinite; }
+.box-fan.spin.rev { animation-direction: reverse; }
+@keyframes fan-spin { to { transform: rotate(360deg); } }
 @keyframes trip { 0% { opacity: .9; } 100% { opacity: 0; } }
 
 /* ---------- 三用電表 ---------- */

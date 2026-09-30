@@ -539,7 +539,7 @@ const LESSONS = {
         html: `
         <div class="prose">
           <p>導線分兩種寫法：<b>單心線</b>以直徑表示（1.6mm、2.0mm），<b>絞線</b>由多股細線絞成，以截面積表示（3.5mm²、5.5mm²、8mm²）。線越粗，能安全通過的電流越大。</p>
-          <p>實際要用多粗，要依負載電流和配線方式查規則的安培容量表。例如穿在 PVC 管內（同一管 3 條以下）：2.0mm 單線是 18A、5.5mm² 絞線是 25A。所以 20A 的插座分路要用 5.5mm²，2.0mm 只能配 15A 的斷路器。另外，照明、插座、電熱分路的電線最細只能用 2.0mm 單線或 3.5mm² 絞線。「迴路 06 居家用電規劃」有完整的選線練習。</p>
+          <p>實際要用多粗，要依負載電流和配線方式查規則的安培容量表。例如穿在 PVC 管內（同一管 3 條以下）：2.0mm 單線是 18A、5.5mm² 絞線是 25A。所以 20A 的插座分路要用 5.5mm²，2.0mm 只能配 15A 的斷路器。另外，照明、插座、電熱分路的電線最細只能用 2.0mm 單線或 3.5mm² 絞線。「迴路 07 居家用電規劃」有完整的選線練習。</p>
         </div>
         <div class="table-scroll"><table class="term-table">
           <thead><tr><th>顏色</th><th>用途</th><th>說明</th></tr></thead>
@@ -550,7 +550,7 @@ const LESSONS = {
             <tr><td><span class="chip-wire" style="background:var(--w-green)"></span>綠</td><td>接地線 E</td><td>只能當接地線，<b>其他用途不可用綠色</b></td></tr>
           </tbody>
         </table></div>
-        <div class="callout">規則要求中性線用白（或灰）、接地線用綠；兩條火線用紅、黑區分，不可用白或綠。配線工坊統一：<b>L1 用紅、L2 用黑</b>，開關線與跨接線用黑或紅。</div>`,
+        <div class="callout">規則要求中性線用白（或灰）、接地線用綠；兩條火線用紅、黑區分，不可用白或綠。配線工坊統一：<b>L1 用紅、L2 用黑</b>，開關線與跨接線用黑或紅。三相四線的三條相線，業界常用 <b>R 紅、S 黑、T 藍</b>（迴路 04 電箱工坊會用到）。</div>`,
       },
       {
         title: '開關家族：單切、三路、四路',
@@ -644,7 +644,7 @@ const LESSONS = {
             <tr><td><b>PVC 管、彎管器</b></td><td>保護導線的管路，術科會有配管</td><td>彎曲處不可壓扁，管口要去毛邊</td></tr>
           </tbody>
         </table></div>
-        <div class="callout">三用電表、檢電起子、絕緣電阻計、鉤表，在「迴路 04」和「迴路 05」會實際操作。</div>`,
+        <div class="callout">三用電表、檢電起子、絕緣電阻計、鉤表，在「迴路 05」和「迴路 06」會實際操作。</div>`,
       },
       {
         title: '安全作業守則',
@@ -776,7 +776,7 @@ const Exam = {
     const box = h('div', {});
     root.append(box);
     const home = () => {
-      const tags = [['basics', '電學基礎'], ['gear', '器材與法規'], ['meter', '三用電表'], ['fault', '查修與安全'], ['plan', '居家用電規劃'], ['common', '共同科目']];
+      const tags = [['basics', '電學基礎'], ['gear', '器材與法規'], ['meter', '三用電表'], ['fault', '查修與安全'], ['box', '電箱與三相'], ['plan', '居家用電規劃'], ['common', '共同科目']];
       box.replaceChildren(h('div', { class: 'home-lower', style: { marginTop: 0 } },
         h('div', { class: 'card stack' },
           h('div', { class: 'eyebrow' }, '模擬考'),
@@ -804,7 +804,7 @@ const Exam = {
           Store.data.examBest = Math.max(Store.data.examBest || 0, score);
           Store.save();
           updateOverall();
-          if (score >= 80) toast('模擬考 80 分以上，迴路 07 通電！', 'ok');
+          if (score >= 80) toast('模擬考 80 分以上，迴路 08 通電！', 'ok');
         },
       });
     };

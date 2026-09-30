@@ -1,5 +1,5 @@
 'use strict';
-/* 迴路 05：故障偵探 —— 用儀表找出隱藏的故障 */
+/* 迴路 06：故障偵探 —— 用儀表找出隱藏的故障 */
 const Fault = (() => {
   const RW = 0.01;                    // 導線與接點電阻
   const LAMP_HOT = 110 * 110 / 60;
@@ -464,7 +464,7 @@ const Fault = (() => {
         Store.save();
         updateOverall();
         beep(988, 0.08, 'sine', 0.05); setTimeout(() => beep(1319, 0.12, 'sine', 0.05), 90);
-        if (Store.data.faultSolved === 4) toast('破案 4 件，迴路 05 通電！', 'ok');
+        if (Store.data.faultSolved === 4) toast('破案 4 件，迴路 06 通電！', 'ok');
       } else beep(220, 0.25, 'sawtooth', 0.04);
       answered = { ok, stars };
       drawAll();

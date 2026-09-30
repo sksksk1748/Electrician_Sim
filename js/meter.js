@@ -1,5 +1,5 @@
 'use strict';
-/* 迴路 04：指針式三用電表模擬 */
+/* 迴路 05：指針式三用電表模擬 */
 const AnalogMeter = (() => {
   const C = 20;                 // Ω 刻度中心值
   const PX = 180, PY = 226;     // 指針軸心
@@ -569,7 +569,7 @@ const MeterLab = (() => {
       Store.save();
       updateOverall();
       beep(988, 0.08, 'sine', 0.05); setTimeout(() => beep(1319, 0.12, 'sine', 0.05), 90);
-      if (step >= TASKS.length) toast('三用電表全部任務完成，迴路 04 通電！', 'ok');
+      if (step >= TASKS.length) toast('三用電表全部任務完成，迴路 05 通電！', 'ok');
       drawTask();
     }
 
